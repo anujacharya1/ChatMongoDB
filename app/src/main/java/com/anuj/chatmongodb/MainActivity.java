@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
 public class MainActivity extends AppCompatActivity {
     /*
         Risk: On client username/password is exposed
@@ -41,15 +40,12 @@ public class MainActivity extends AppCompatActivity {
                                             delete document inside it)
 
         start storing the records in this key
-
-
-
-
      */
 
     private static String SESS1 = "sess1";
     private static String SESS2 = "sess2";
 
+    private  static String DATABASE = "heroku_3c1g35n4";
     private static String collectionName = SESS1+"_"+SESS2;
 
     List<String> items = new ArrayList<>();
@@ -59,13 +55,12 @@ public class MainActivity extends AppCompatActivity {
     DBCollection coll;
     MongoClient mongoClient;
 
-    private static final String MONGO_HOST_IP = "ec2-52-8-69-36.us-west-1.compute.amazonaws.com";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        MongoClientURI uri = new MongoClientURI( "mongodb://anuj:anuj@ds019058.mlab.com:19058/heroku_73gl73n7");
+        MongoClientURI uri = new MongoClientURI( "mongodb://anuj:anuj@ds011298.mlab.com:11298/heroku_3c1g35n4");
         mongoClient = new MongoClient(uri);
 
         //this will create the collection if not exist
@@ -134,14 +129,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            boolean collectionExists = mongoClient.getDB("heroku_73gl73n7").collectionExists(collectionName);
+            boolean collectionExists = mongoClient.getDB(DATABASE).collectionExists(collectionName);
             if (collectionExists == false) {
                 Log.i("INFO", "collection does not exist going to create one");
                 DBObject options = BasicDBObjectBuilder.start().add("capped", true).add("size", 2000000000l).get();
-                coll = mongoClient.getDB("heroku_73gl73n7").createCollection(collectionName, options);
+                coll = mongoClient.getDB(DATABASE).createCollection(collectionName, options);
             }
             else{
-                coll = mongoClient.getDB("heroku_73gl73n7").getCollection(collectionName);
+                coll = mongoClient.getDB(DATABASE).getCollection(collectionName);
             }
 
             return collectionExists;

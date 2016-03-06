@@ -195,5 +195,4 @@ public class MainActivity extends AppCompatActivity {
             itemsAdapter.notifyDataSetChanged();
         }
     }
-
 }

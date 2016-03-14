@@ -30,8 +30,6 @@ public class MonSubImpl<T> implements MonSub<T> {
     DBCollection coll;
     private MonSubNotification monSubNotification;
 
-    private boolean collectionDidNotExist = true;
-
     @Override
     public MonSub register(String sess1, String sess2, String database, String URI) {
         if(sess1==null || sess2==null || database==null || URI==null
@@ -77,12 +75,12 @@ public class MonSubImpl<T> implements MonSub<T> {
                 // going to insert the BEGIN text as without this cursor will throw error
                 // you need to have one element
                 Log.i("INFO", "collection created collectionName=" + coll.getName());
-                startTheCursonOnCollection();
+                // this is neaded for begin cursor to act as HEAD
+                new InsertAsyncTask().execute("BEGIN_CURSOR", "Y");
                 return;
             }
             else{
                 Log.i("INFO", "collection already exist collectionName=" + coll.getName());
-                collectionDidNotExist = false;
                 startTheCursonOnCollection();
             }
         }
@@ -124,13 +122,18 @@ public class MonSubImpl<T> implements MonSub<T> {
             Object session2Obj = dbObject.get(SESS2);
 
             if(session1Obj!=null){
+
                 Log.i("INFO", "PollingAsyncTask sess1Obj");
 //                ClientObject sess1Result = MongoSubUtil.convertJSONToPojo(session1Obj.toString());
-                monSubNotification.msgFromSess1(session1Obj.toString());
+                if(!isMockElement(session1Obj)){
+                    monSubNotification.msgFromSess1(session1Obj.toString());
+                }
             }
             else if (session2Obj!=null){
                 Log.i("INFO", "PollingAsyncTask sess2Obj");
-                monSubNotification.msgFromSess2(session2Obj.toString());
+                if(!isMockElement(session2Obj)) {
+                    monSubNotification.msgFromSess2(session2Obj.toString());
+                }
             }
 
             Log.e("ERROR", "PollingAsyncTask does not return any message");
@@ -138,6 +141,12 @@ public class MonSubImpl<T> implements MonSub<T> {
         }
     }
 
+    private boolean isMockElement(Object sessionObj){
+        if(sessionObj instanceof String && ((String) sessionObj).equalsIgnoreCase("BEGIN_CURSOR")){
+            return true;
+        }
+        return false;
+    }
     /**
      *
      * String[0] text
@@ -153,10 +162,9 @@ public class MonSubImpl<T> implements MonSub<T> {
             coll.insert(document);
             Log.i("INFO", "insert complete");
 
-            // do the polling on the collection only if it's not happen before
-            // e.g don't start the custson on each message,
-            // but during the first message and collection did not exist start the cursor
-            if(params[1]==null || collectionDidNotExist==true){
+            if(params[1]!=null && ((String)params[1]).equalsIgnoreCase("Y")){
+                // do the polling as the collection was not existing and this was called by
+                // CollectionAsycTask post process flow
                 startTheCursonOnCollection();
             }
 
@@ -178,9 +186,9 @@ public class MonSubImpl<T> implements MonSub<T> {
         }
 
         // insert in background
-        // send "N" because by this time the curson will be already on
+        // send "N" because by this time the cursor will be already on
         // TODO: Investigate for any corner cases
-        new InsertAsyncTask().execute(msg, new Object());
+        new InsertAsyncTask().execute(msg, "N");
     }
 
 

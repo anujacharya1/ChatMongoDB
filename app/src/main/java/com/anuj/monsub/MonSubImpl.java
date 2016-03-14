@@ -13,6 +13,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
+import java.util.Objects;
+
 /**
  * Created by anujacharya on 3/11/16.
  */
@@ -147,8 +149,11 @@ public class MonSubImpl<T> implements MonSub<T> {
             coll.insert(document);
             Log.i("INFO", "insert complete");
 
-            // do the polling on the collection
-            startTheCursonOnCollection();
+            // do the polling on the collection only if it's not happen before
+            // e.g not during each send message
+            if(params[1]==null){
+                startTheCursonOnCollection();
+            }
 
             return null;
         }
@@ -170,7 +175,7 @@ public class MonSubImpl<T> implements MonSub<T> {
         // insert in background
         // send "N" because by this time the curson will be already on
         // TODO: Investigate for any corner cases
-        new InsertAsyncTask().execute(msg);
+        new InsertAsyncTask().execute(msg, new Object());
     }
 
 

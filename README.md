@@ -14,7 +14,9 @@ A demo application is provided as the sample which uses monsub interface.
 5. Heroku come up with free 2GB of mongoLab, use that for your testing
 6. You would need database name and URL for mongo
 7. The sess1 and sess2 is the sample can be anything specify to your application, think as if unique
-    name between the two clients
+   name between the two clients
+8. If you need to use your own custom object to be persisted in mongo, make sure it extends BasicDBObject
+   look at the sample for detail
 
 ## API:
 
@@ -30,7 +32,7 @@ send(): this is used to send the messgae on the channel, which inturn will be
 ## Future Enhancement:
 
 1. close functionality which will close all the ongoing connection for the client
-2. make use of generic instead of text to send the message to other client
+2. Extend it for more then 2 more person chat
 
 Notes:
 

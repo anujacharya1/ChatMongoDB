@@ -8,7 +8,7 @@
     <ImageView
         android:layout_width="100px"
         android:layout_height="100px"
-        android:id="@+id/ivChat"
+        android:id="@+id/ivChatSess"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -17,9 +17,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="New Text"
-        android:id="@+id/tvChatMsg"
-        android:layout_alignBottom="@+id/ivChat"
-        android:layout_toRightOf="@+id/ivChat"
+        android:id="@+id/tvChatMsgSess"
+        android:layout_alignBottom="@+id/ivChatSess"
+        android:layout_toRightOf="@+id/ivChatSess"
         android:layout_alignParentTop="true"
         android:gravity="center|left"
         android:layout_alignParentRight="true"

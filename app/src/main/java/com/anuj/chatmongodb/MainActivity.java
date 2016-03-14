@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private static String SESS2 = "sess2";
     private  static String DATABASE = "heroku_3c1g35n4";
     private static String MONGODB_URI = "mongodb://anuj:anuj@ds011298.mlab.com:11298/heroku_3c1g35n4";
-    List<String> items = new ArrayList<>();
-    ArrayAdapter<String> itemsAdapter;
+    ArrayList<ClientObject> clientObjects = new ArrayList<>();
+    private ChatAdapter chatAdapter;
     EditText etMsg;
     Button btnSend;
 
@@ -53,20 +53,18 @@ public class MainActivity extends AppCompatActivity {
         etMsg = (EditText) findViewById(R.id.etMsg);
         btnSend = (Button) findViewById(R.id.btnSend);
 
-        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+        chatAdapter = new ChatAdapter(this, clientObjects);
 
+//        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+//
         ListView listView = (ListView) findViewById(R.id.lvMsg);
-        listView.setAdapter(itemsAdapter);
+        listView.setAdapter(chatAdapter);
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //insert in mongo
                 String txt = etMsg.getText().toString();
-                //                getResources().getDrawable(R.drawable.image01),
-
-//                Image image = new Image();
-//                Drawable img = getResources().getDrawable(R.drawable.chat);
                 ClientObject clientObject = new ClientObject();
                 clientObject.setMsg(txt);
                 monSub.send(clientObject);
@@ -80,8 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("INFO", "msgFromSess1 " + message);
 
                 ClientObject clientObject = new Gson().fromJson(message, ClientObject.class);
-                itemsAdapter.add(clientObject.getMsg());
-                itemsAdapter.notifyDataSetChanged();
+                chatAdapter.add(clientObject);
+                chatAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -89,10 +87,9 @@ public class MainActivity extends AppCompatActivity {
                 // handle messaged from sess2
                 Log.i("INFO", "msgFromSess2 "+message);
                 ClientObject clientObject = new Gson().fromJson(message, ClientObject.class);
-                itemsAdapter.add(clientObject.getMsg());
-                itemsAdapter.notifyDataSetChanged();
+                chatAdapter.add(clientObject);
+                chatAdapter.notifyDataSetChanged();
             }
-
         });
     }
 }

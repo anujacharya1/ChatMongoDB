@@ -7,6 +7,7 @@ import com.mongodb.BasicDBObject;
  */
 public class ClientObject extends BasicDBObject {
 
+
     public ClientObject() {
     }
 

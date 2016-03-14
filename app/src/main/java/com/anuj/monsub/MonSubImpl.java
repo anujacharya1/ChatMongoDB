@@ -30,6 +30,8 @@ public class MonSubImpl<T> implements MonSub<T> {
     DBCollection coll;
     private MonSubNotification monSubNotification;
 
+    private boolean collectionDidNotExist = true;
+
     @Override
     public MonSub register(String sess1, String sess2, String database, String URI) {
         if(sess1==null || sess2==null || database==null || URI==null
@@ -75,10 +77,12 @@ public class MonSubImpl<T> implements MonSub<T> {
                 // going to insert the BEGIN text as without this cursor will throw error
                 // you need to have one element
                 Log.i("INFO", "collection created collectionName=" + coll.getName());
+                startTheCursonOnCollection();
                 return;
             }
             else{
                 Log.i("INFO", "collection already exist collectionName=" + coll.getName());
+                collectionDidNotExist = false;
                 startTheCursonOnCollection();
             }
         }
@@ -150,8 +154,9 @@ public class MonSubImpl<T> implements MonSub<T> {
             Log.i("INFO", "insert complete");
 
             // do the polling on the collection only if it's not happen before
-            // e.g not during each send message
-            if(params[1]==null){
+            // e.g don't start the custson on each message,
+            // but during the first message and collection did not exist start the cursor
+            if(params[1]==null || collectionDidNotExist==true){
                 startTheCursonOnCollection();
             }
 

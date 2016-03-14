@@ -3,6 +3,8 @@ package com.anuj.monsub;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.anuj.chatmongodb.ClientObject;
+import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.Bytes;
@@ -14,7 +16,7 @@ import com.mongodb.MongoClient;
 /**
  * Created by anujacharya on 3/11/16.
  */
-public class MonSubImpl implements MonSub {
+public class MonSubImpl<T> implements MonSub<T> {
 
 
     private static String SESS1;
@@ -71,7 +73,6 @@ public class MonSubImpl implements MonSub {
                 // going to insert the BEGIN text as without this cursor will throw error
                 // you need to have one element
                 Log.i("INFO", "collection created collectionName=" + coll.getName());
-                new InsertAsyncTask().execute("LETS THE FUN START", "Y");
                 return;
             }
             else{
@@ -94,48 +95,60 @@ public class MonSubImpl implements MonSub {
                 System.out.println("Waiting for events");
                 while (cur.hasNext()) {
                     DBObject obj = cur.next();
-                    new PollingAsyncTask().execute(obj);
+                    new PollingAsyncTask<T>().execute(obj);
                 }
             }
         };
         new Thread(task).start();
     }
-    private class PollingAsyncTask extends AsyncTask<DBObject, Void, String> {
+    private class PollingAsyncTask<T> extends AsyncTask<Object, Void, DBObject> {
 
-        protected String doInBackground(DBObject... dbObjects) {
+        protected DBObject doInBackground(Object... dbObjects) {
             Log.i("INFO", "PollingAsyncTask#####################");
             System.out.println(dbObjects[0]);
-            String msg = (String) dbObjects[0].get("sess1");
-            return msg;
+            DBObject dbObject = (DBObject)dbObjects[0];
+            return dbObject;
         }
 
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(DBObject dbObject) {
             // notify the client about the message
             // client must implement this
-            monSubNotification.message(result);
+
+            Object session1Obj = dbObject.get(SESS1);
+            Object session2Obj = dbObject.get(SESS2);
+
+            if(session1Obj!=null){
+                Log.i("INFO", "PollingAsyncTask sess1Obj");
+//                ClientObject sess1Result = MongoSubUtil.convertJSONToPojo(session1Obj.toString());
+                monSubNotification.msgFromSess1(session1Obj.toString());
+            }
+            else if (session2Obj!=null){
+                Log.i("INFO", "PollingAsyncTask sess2Obj");
+                monSubNotification.msgFromSess2(session2Obj.toString());
+            }
+
+            Log.e("ERROR", "PollingAsyncTask does not return any message");
+
         }
     }
 
     /**
      *
      * String[0] text
-     * String[1] do polling Y/N
+     * String[1] do polling Y/N (String type)
      *
      */
-    private class InsertAsyncTask extends AsyncTask<String, Void, Void>{
+    private class InsertAsyncTask<T> extends AsyncTask<T, Void, Void>{
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected Void doInBackground(T... params) {
             BasicDBObject document = new BasicDBObject();
             document.put(SESS1, params[0]);
             coll.insert(document);
             Log.i("INFO", "insert complete");
 
-            if(params[1]!=null && params[1].equalsIgnoreCase("Y")){
-                // do the polling as the collection was not existing and this was called by
-                // CollectionAsycTask post process flow
-                startTheCursonOnCollection();
-            }
+            // do the polling on the collection
+            startTheCursonOnCollection();
 
             return null;
         }
@@ -147,7 +160,7 @@ public class MonSubImpl implements MonSub {
     }
 
     @Override
-    public void send(String msg) {
+    public void send(T msg) {
         if(coll == null){
             // if at this point the coll is null there is something went wrong
             Log.e("ERROR", "SOMETHING WRONG");
@@ -157,8 +170,10 @@ public class MonSubImpl implements MonSub {
         // insert in background
         // send "N" because by this time the curson will be already on
         // TODO: Investigate for any corner cases
-        new InsertAsyncTask().execute(msg, "N");
+        new InsertAsyncTask().execute(msg);
     }
+
+
 
     @Override
     public void open(MonSubNotification monSubNotification) {
@@ -171,10 +186,6 @@ public class MonSubImpl implements MonSub {
     @Override
     public void close() {
         // TODO: Kill all the connection and threads
-    }
-
-    public interface MonSubNotification{
-        void message(String message);
     }
 
     public void setMonSubNotification(MonSubNotification monSubNotification){

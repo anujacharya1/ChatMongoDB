@@ -3,7 +3,7 @@ package com.anuj.monsub;
 /**
  * Created by anujacharya on 3/10/16.
  */
-public interface MonSub {
+public interface MonSub<T> {
 
     /**
      * This will register the connection
@@ -26,13 +26,13 @@ public interface MonSub {
      * Send the message
      * @param msg
      */
-    void send(String msg);
+    void send(T msg);
 
     /**
      *
      * @param monSubNotification this is required to receive the notification back
      */
-    void open(MonSubImpl.MonSubNotification monSubNotification);
+    void open(MonSubNotification monSubNotification);
 
 
     void close();

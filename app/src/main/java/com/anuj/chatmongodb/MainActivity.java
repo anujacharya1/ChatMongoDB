@@ -1,15 +1,21 @@
 package com.anuj.chatmongodb;
 
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.anuj.monsub.MonSub;
 import com.anuj.monsub.MonSubImpl;
+import com.anuj.monsub.MonSubNotification;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final MonSub monSub = new MonSubImpl();
+        final MonSub<ClientObject> monSub = new MonSubImpl<>();
         monSub.register(SESS1, SESS2, DATABASE, MONGODB_URI);
 
         etMsg = (EditText) findViewById(R.id.etMsg);
@@ -57,16 +63,36 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //insert in mongo
                 String txt = etMsg.getText().toString();
-                monSub.send(txt);
+                //                getResources().getDrawable(R.drawable.image01),
+
+//                Image image = new Image();
+//                Drawable img = getResources().getDrawable(R.drawable.chat);
+                ClientObject clientObject = new ClientObject();
+                clientObject.setMsg(txt);
+                monSub.send(clientObject);
             }
         });
 
-        monSub.open(new MonSubImpl.MonSubNotification() {
+        monSub.open(new MonSubNotification<String>() {
             @Override
-            public void message(String message) {
-                itemsAdapter.add(message);
+            public void msgFromSess1(String message) {
+                // handle messaged from sess1
+                Log.i("INFO", "msgFromSess1 " + message);
+
+                ClientObject clientObject = new Gson().fromJson(message, ClientObject.class);
+                itemsAdapter.add(clientObject.getMsg());
                 itemsAdapter.notifyDataSetChanged();
             }
+
+            @Override
+            public void msgFromSess2(String message) {
+                // handle messaged from sess2
+                Log.i("INFO", "msgFromSess2 "+message);
+                ClientObject clientObject = new Gson().fromJson(message, ClientObject.class);
+                itemsAdapter.add(clientObject.getMsg());
+                itemsAdapter.notifyDataSetChanged();
+            }
+
         });
     }
 }
